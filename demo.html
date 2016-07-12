@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html>
+
+<!-- http://lepidllama.net/blog/how-to-push-an-existing-cloud9-project-to-github/ -->
+	<head>
+		<title>CRS.Simple example - Leaflet</title>
+
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.0.0/jquery.min.js"></script>
+
+<!--
+		<link rel="stylesheet" href="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.css" />
+		<script src="https://npmcdn.com/leaflet@0.7.7/dist/leaflet.js"></script>
+-->
+
+		<link rel="stylesheet" href="https://npmcdn.com/leaflet@1.0.0-rc.1/dist/leaflet.css" />
+		<script src="https://npmcdn.com/leaflet@1.0.0-rc.1/dist/leaflet.js"></script>
+
+		<style>
+			#map {
+				background-color: #666;
+				width: 600px;
+				height: 400px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id='map'></div>
+
+		<script>
+			/*global L*/
+			/*global $*/
+			var map = L.map('map', {
+				crs: L.CRS.Simple,
+				minZoom: -4,
+				maxZoom: +3
+			});
+			var yx = L.latLng;
+			var xy = function(x, y) {
+				if (L.Util.isArray(x)) { // When doing xy([x, y]);
+					return yx(x[1], x[0]);
+				}
+				return yx(y, x); // When doing xy(x, y);
+			};
+
+			L.Circle.include({
+				_getLngRadius: function () {
+					return this._getLatRadius();
+				}
+			});
+
+			var bounds = [
+				[0, 0],
+				[10000, 10000]
+			];
+			//L.imageOverlay('images/bg.png', bounds).addTo(map);
+
+			var offsetX = 5000;
+			var offsetY = 5000;
+			$.getJSON('https://static.mwomercs.com/data/cw/mapdata.json', function(data) {
+				$('.timestamp').text(data.generated);
+				$.each(data, function(idx, val) {
+					if (val !== undefined) {
+						// Name:         val.name
+						// Pos-X:        val.position.x
+						// Pos-y:        val.position.y
+						// Owner:        val.owner.name --> "None" = there is no logo
+						// Icon:         val.owner.icon
+						// Invader:      val.invading.name --> "None" = no invader
+						// Invader-Icon: val.invading.icon
+
+						if (val.contested == '1') {
+							// umkämpft
+						}
+
+						//document.write("---" + val.name
+						//+ ":" + val.owner.name
+						//+ ":" + val.position.x
+						//+ ":" + val.position.y
+						//+ "--" + typeof val
+						//+ "<br>");
+
+						var syscolor = 'gray';
+
+						if (val.name !== " ") {
+							if (val.position !== undefined) {
+								if (val.owner !== undefined) {
+									switch (val.owner.id) {
+										case "5": // DAVION
+											syscolor = 'yellow';
+											break;
+										case "6": // KURITA
+											syscolor = 'red';
+											break;
+										case "7": // LIAO
+											syscolor = 'lightgreen';
+											break;
+										case "8": // MARIK
+											syscolor = 'purple';
+											break;
+										case "9": // RASALHAGUE
+											syscolor = 'lightblue';
+											break;
+										case "10": // STEINER
+											syscolor = 'blue';
+											break;
+										case "11": // CLAN SMOKE JAGUAR
+											syscolor = 'darkgray';
+											break;
+										case "12": // CLAN JADE FALCON
+											syscolor = 'green';
+											break;
+										case "13": // CLAN WOLF
+											syscolor = 'brown';
+											break;
+									}
+								}
+
+								var circle = L.circle([+val.position.y*5 + offsetY, +val.position.x*5 + offsetX], 5, {
+									radius: 500,
+									stroke: true,
+									color: syscolor,
+									weight: 3,
+									opacity: 1.0,
+									fill: true,
+									fillColor: syscolor,
+									fillOpacity: 0.6,
+									fillRule: 'nonzero',
+									dashArray: null,
+									lineCap: null,
+									lineJoin: null,
+									clickable: true,
+									pointerEvents: null,
+									className: val.name
+								}).addTo(map);
+							}
+						}
+					}
+				});
+			});
+
+			var sol = xy(175.2 + offsetX, 145.0 + offsetY);
+			var deneb = xy(218.7 + offsetX, 8.3 + offsetY);
+			L.marker(sol).addTo(map).bindPopup('Sol');
+			L.marker(deneb).addTo(map).bindPopup('Deneb');
+			L.polyline([sol, deneb]).addTo(map);
+
+			map.fitBounds(bounds);
+		</script>
+
+	</body>
+
+</html>
